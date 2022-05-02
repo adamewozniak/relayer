@@ -45,7 +45,7 @@ var (
 	defaultDelayPeriod = uint64(0)
 
 	// Variables used for retries
-	RtyAttNum = uint(5)
+	RtyAttNum = uint(2)
 	RtyAtt    = retry.Attempts(RtyAttNum)
 	RtyDel    = retry.Delay(time.Millisecond * 400)
 	RtyErr    = retry.LastErrorOnly(true)
@@ -1045,13 +1045,17 @@ func (cc *CosmosProvider) AcknowledgementFromSequence(ctx context.Context, dst p
 }
 
 func rcvPacketQuery(channelID string, seq int) []string {
-	return []string{fmt.Sprintf("%s.packet_src_channel='%s'", spTag, channelID),
-		fmt.Sprintf("%s.packet_sequence='%d'", spTag, seq)}
+	return []string{
+		fmt.Sprintf("%s.packet_src_channel='%s'", spTag, channelID),
+		fmt.Sprintf("%s.packet_sequence='%d'", spTag, seq),
+	}
 }
 
 func ackPacketQuery(channelID string, seq int) []string {
-	return []string{fmt.Sprintf("%s.packet_dst_channel='%s'", waTag, channelID),
-		fmt.Sprintf("%s.packet_sequence='%d'", waTag, seq)}
+	return []string{
+		fmt.Sprintf("%s.packet_dst_channel='%s'", waTag, channelID),
+		fmt.Sprintf("%s.packet_sequence='%d'", waTag, seq),
+	}
 }
 
 // relayPacketsFromResultTx looks through the events in a *ctypes.ResultTx
@@ -1240,9 +1244,11 @@ func (cc *CosmosProvider) MsgUpgradeClient(srcClientId string, consRes *clientty
 	if acc, err = cc.Address(); err != nil {
 		return nil, err
 	}
-	return NewCosmosMessage(&clienttypes.MsgUpgradeClient{ClientId: srcClientId, ClientState: clientRes.ClientState,
+	return NewCosmosMessage(&clienttypes.MsgUpgradeClient{
+		ClientId: srcClientId, ClientState: clientRes.ClientState,
 		ConsensusState: consRes.ConsensusState, ProofUpgradeClient: consRes.GetProof(),
-		ProofUpgradeConsensusState: consRes.ConsensusState.Value, Signer: acc}), nil
+		ProofUpgradeConsensusState: consRes.ConsensusState.Value, Signer: acc,
+	}), nil
 }
 
 // AutoUpdateClient update client automatically to prevent expiry

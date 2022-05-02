@@ -1151,7 +1151,7 @@ $ %s tx relay-pkt demo-path channel-1 1`,
 			var arr []uint64
 			_ = json.Unmarshal([]byte(byteValue), &arr)
 
-			for _, seqNum := range arr {
+			for index, seqNum := range arr {
 				if err := relayer.RelayPacketNoValidation(
 					cmd.Context(),
 					a.Log,
@@ -1162,6 +1162,18 @@ $ %s tx relay-pkt demo-path channel-1 1`,
 					seqNum,
 					channel,
 				); err != nil {
+
+					// export json to a new file
+					outputArr := arr[index:]
+					content, contentErr := json.Marshal(outputArr)
+					if contentErr != nil {
+						fmt.Println(contentErr)
+					}
+
+					if outputErr := ioutil.WriteFile(args[2], content, 0o644); outputErr != nil {
+						fmt.Println(outputErr)
+					}
+
 					return err
 				}
 			}

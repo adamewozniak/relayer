@@ -39,7 +39,7 @@ import (
 )
 
 var (
-	RtyAttNum = uint(5)
+	RtyAttNum = uint(2)
 	RtyAtt    = retry.Attempts(RtyAttNum)
 	RtyDel    = retry.Delay(time.Millisecond * 400)
 	RtyErr    = retry.LastErrorOnly(true)
