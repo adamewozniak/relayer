@@ -1,7 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -36,6 +39,7 @@ Most of these commands take a [path] argument. Make sure:
 		relayMsgsCmd(a),
 		relayMsgCmd(a),
 		relayMsgNoValidationCmd(a),
+		relayMsgNoValidationFromFileCmd(a),
 		relayAcksCmd(a),
 		xfersend(a),
 		lineBreakCommand(),
@@ -1102,4 +1106,70 @@ func ensureKeysExist(chains map[string]*relayer.Chain) error {
 	}
 
 	return nil
+}
+
+func relayMsgNoValidationFromFileCmd(a *appState) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "relay-packet-no-validation-file path_name src_channel_id file.json",
+		Aliases: []string{"relay-pkt-noval-file"},
+		Short:   "relay a non-relayed packet with a specific sequence number, in both directions",
+		Args:    withUsage(cobra.ExactArgs(3)),
+		Example: strings.TrimSpace(fmt.Sprintf(`
+$ %s transact relay-packet demo-path channel-1 1
+$ %s tx relay-pkt demo-path channel-1 1`,
+			appName, appName,
+		)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c, src, dst, err := a.Config.ChainsFromPath(args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = ensureKeysExist(c); err != nil {
+				return err
+			}
+
+			maxTxSize, maxMsgLength, err := GetStartOptions(cmd)
+			if err != nil {
+				return err
+			}
+
+			channelID := args[1]
+			channel, err := relayer.QueryChannel(cmd.Context(), c[src], channelID)
+			if err != nil {
+				return err
+			}
+
+			jsonFile, err := os.Open(args[2])
+			if err != nil {
+				return err
+			}
+
+			defer jsonFile.Close()
+
+			byteValue, _ := ioutil.ReadAll(jsonFile)
+			var arr []uint64
+			_ = json.Unmarshal([]byte(byteValue), &arr)
+			fmt.Println(arr)
+
+			for _, seqNum := range arr {
+				if err := relayer.RelayPacketNoValidation(
+					cmd.Context(),
+					a.Log,
+					c[src],
+					c[dst],
+					maxTxSize,
+					maxMsgLength,
+					seqNum,
+					channel,
+				); err != nil {
+					return err
+				}
+			}
+
+			return nil
+		},
+	}
+
+	return strategyFlag(a.Viper, cmd)
 }
