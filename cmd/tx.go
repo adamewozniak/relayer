@@ -1150,7 +1150,6 @@ $ %s tx relay-pkt demo-path channel-1 1`,
 			byteValue, _ := ioutil.ReadAll(jsonFile)
 			var arr []uint64
 			_ = json.Unmarshal([]byte(byteValue), &arr)
-			fmt.Println(arr)
 
 			for _, seqNum := range arr {
 				if err := relayer.RelayPacketNoValidation(
