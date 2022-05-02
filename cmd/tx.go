@@ -35,6 +35,7 @@ Most of these commands take a [path] argument. Make sure:
 		linkThenStartCmd(a),
 		relayMsgsCmd(a),
 		relayMsgCmd(a),
+		relayMsgNoValidationCmd(a),
 		relayAcksCmd(a),
 		xfersend(a),
 		lineBreakCommand(),
@@ -42,13 +43,13 @@ Most of these commands take a [path] argument. Make sure:
 		createClientCmd(a),
 		updateClientsCmd(a),
 		upgradeClientsCmd(a),
-		//upgradeChainCmd(),
+		// upgradeChainCmd(),
 		createConnectionCmd(a),
 		createChannelCmd(a),
 		closeChannelCmd(a),
 		lineBreakCommand(),
 
-		//sendCmd(),
+		// sendCmd(),
 	)
 
 	return cmd
@@ -740,6 +741,50 @@ $ %s tx relay-pkt demo-path channel-1 1`,
 			}
 
 			return relayer.RelayPacket(cmd.Context(), a.Log, c[src], c[dst], sp, maxTxSize, maxMsgLength, uint64(seqNum), channel)
+		},
+	}
+
+	return strategyFlag(a.Viper, cmd)
+}
+
+func relayMsgNoValidationCmd(a *appState) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:     "relay-packet-no-validation path_name src_channel_id seq_num",
+		Aliases: []string{"relay-pkt-noval"},
+		Short:   "relay a non-relayed packet with a specific sequence number, in both directions",
+		Args:    withUsage(cobra.ExactArgs(3)),
+		Example: strings.TrimSpace(fmt.Sprintf(`
+$ %s transact relay-packet demo-path channel-1 1
+$ %s tx relay-pkt demo-path channel-1 1`,
+			appName, appName,
+		)),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			c, src, dst, err := a.Config.ChainsFromPath(args[0])
+			if err != nil {
+				return err
+			}
+
+			if err = ensureKeysExist(c); err != nil {
+				return err
+			}
+
+			maxTxSize, maxMsgLength, err := GetStartOptions(cmd)
+			if err != nil {
+				return err
+			}
+
+			seqNum, err := strconv.Atoi(args[2])
+			if err != nil {
+				return err
+			}
+
+			channelID := args[1]
+			channel, err := relayer.QueryChannel(cmd.Context(), c[src], channelID)
+			if err != nil {
+				return err
+			}
+
+			return relayer.RelayPacketNoValidation(cmd.Context(), a.Log, c[src], c[dst], maxTxSize, maxMsgLength, uint64(seqNum), channel)
 		},
 	}
 
