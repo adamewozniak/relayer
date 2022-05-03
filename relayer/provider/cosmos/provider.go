@@ -45,9 +45,9 @@ var (
 	defaultDelayPeriod = uint64(0)
 
 	// Variables used for retries
-	RtyAttNum = uint(2)
+	RtyAttNum = uint(1)
 	RtyAtt    = retry.Attempts(RtyAttNum)
-	RtyDel    = retry.Delay(time.Millisecond * 400)
+	RtyDel    = retry.Delay(time.Millisecond * 10)
 	RtyErr    = retry.LastErrorOnly(true)
 
 	// Strings for parsing events

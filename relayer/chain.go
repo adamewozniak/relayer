@@ -39,9 +39,9 @@ import (
 )
 
 var (
-	RtyAttNum = uint(2)
+	RtyAttNum = uint(1)
 	RtyAtt    = retry.Attempts(RtyAttNum)
-	RtyDel    = retry.Delay(time.Millisecond * 400)
+	RtyDel    = retry.Delay(time.Millisecond * 10)
 	RtyErr    = retry.LastErrorOnly(true)
 
 	ModuleBasics = []module.AppModuleBasic{
